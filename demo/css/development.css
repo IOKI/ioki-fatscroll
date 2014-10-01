@@ -2,24 +2,29 @@ body {
     background: url('http://subtlepatterns.com/patterns/dark_geometric.png');
 }
 
+.pearson-logo {
+    float: left;
+    margin-right: 2em;
+}
+
 .page-header {
     color: #fff;
 }
 
 .page-header h1 {
-    color: #DB591C;
+    color: #e77a2c;
 }
 
 [fatscroll] {
     background-color: #fff;
 }
 
+[fatscroll] scroll-area {
+    height: 300px;
+}
+
 scroll-content {
     font-family: Verdana, Arial, Helvetica, sans-serif;
     line-height: 1.5em;
     padding: 1em;
-}
-
-scroll-area {
-    height: 300px;
 }
