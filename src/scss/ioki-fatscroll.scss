@@ -1,0 +1,29 @@
+@import "compass/css3/user-interface";
+
+[fatscroll] {
+    overflow: hidden;
+    position: relative;
+    scroll-area {
+        position: relative;
+        display: block;
+        overflow: hidden;
+        height: inherit;
+    }
+    thumb {
+        display: block;
+        width: 10px;
+        height: 50px; /* default */
+        position: absolute;
+        top: 0;
+        right: 0;
+        opacity: 0.4;
+        background: #000;
+    }
+    scroll-content {
+        display: block;
+    }
+}
+
+.no-select {
+    @include user-select(none);
+}

@@ -1,0 +1,25 @@
+body {
+    background: url('http://subtlepatterns.com/patterns/dark_geometric.png');
+}
+
+.page-header {
+    color: #fff;
+}
+
+.page-header h1 {
+    color: #DB591C;
+}
+
+[fatscroll] {
+    background-color: #fff;
+}
+
+scroll-content {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    line-height: 1.5em;
+    padding: 1em;
+}
+
+scroll-area {
+    height: 300px;
+}
