@@ -8,81 +8,117 @@ angular.module('ioki.fatscroll', [])
             templateUrl: 'templates/ioki-fatscroll',
 
             link: function (scope, element) {
-                var scrollWrapper = element[0],
-                    scrollArea = scrollWrapper.firstChild,
-                    scrollAreaHeight = element.find('scroll-content')[0].clientHeight,
-                    scrollbarViewportHeight = element.find('scroll-area')[0].clientHeight,
 
-                    thumb = element.find('thumb'),
-                    thumbHeight,
-                    thumbTopStartPos,
+                var scrollWrapper, scrollWrapperHeight,
 
-                    dragStartPos,
-                    scrollAreaStartPosition,
+                    scrollArea, scrollAreaEl,
 
-                    viewRatio = scrollbarViewportHeight / scrollAreaHeight;
+                    scrollContentHeight,
 
-                /* Hide the scroll when there isn't enough content to scroll,
-                 if there is enough content, initialize pi-fatscroll */
-                if (scrollAreaHeight > scrollbarViewportHeight) {
-                    init();
-                } else {
-                    thumb.css('display', 'none');
-                }
+                    thumb = element.find('thumb'), thumbHeight, thumbTopStartPos,
+
+                    dragStartPos, scrollAreaStartPosition,
+
+                    viewRatio,
+
+                    bodyEl = $document.find('body'),
+
+                    newTop, maxTop,
+
+                    realTop = 0;
+
+                scope.scrollContentHeight = element.find('scroll-content')[0];
+
+                /* Add listeners */
+                element.on('mousewheel', mousewheel);
+                element.on('DOMMouseScroll', mousewheel);
+                thumb.on('mousedown touchstart', startDrag);
+
+                init();
+
+                scope.$watch('scrollContentHeight.clientHeight', function (newVal, oldVal) {
+                    /* re-init when content is loaded */
+                    if (newVal !== oldVal) {
+                        init();
+                    }
+                });
 
                 function init() {
+                    scrollWrapper = element[0];
+                    scrollWrapperHeight = element[0].clientHeight;
+
+                    scrollArea = scrollWrapper.firstChild;
+                    scrollAreaEl = element.find('scroll-area');
+
+                    scrollContentHeight = element.find('scroll-content')[0].clientHeight;
+
+                    viewRatio = scrollWrapperHeight / scrollContentHeight;
+
+                    bodyEl = $document.find('body');
+
                     /* Adjust thumb height to the content size */
                     calculateThumbHeight();
 
-                    /* Add listeners */
-                    element.on('mousewheel', mousewheel);
-                    element.on('DOMMouseScroll', mousewheel);
-                    thumb.on('mousedown touchstart', startDrag);
+                    /* set height of area on the base of the parent element */
+                    scrollAreaEl.css('height', scrollWrapperHeight + 'px');
+
+                    if (scrollContentHeight <= scrollWrapperHeight) {
+                        thumb.css('display', 'none');
+                    } else {
+                        thumb.css('display', 'block');
+                    }
+
+                }
+
+                function scrollTo(element, additionalOffset) {
+                    var maxTopThumb = calculateMaxTop();
+
+                    maxTop = parseInt(maxTopThumb / viewRatio, 10);
+
+                    if (typeof element !== 'number') {
+
+                        if (typeof additionalOffset === 'number') {
+                            element = element.offsetTop + additionalOffset;
+                        } else {
+                            element = element.offsetTop;
+                        }
+
+                    }
+
+                    if (element > maxTop) {
+                        thumb.css('top', maxTopThumb + 'px');
+                        realTop = maxTopThumb;
+                        scrollArea.scrollTop = maxTop;
+                    } else if (element < 0) {
+                        thumb.css('top', '0');
+                        realTop = 0;
+                        scrollArea.scrollTop = 0;
+                    } else {
+                        thumb.css('top', +(element * viewRatio) + 'px');
+                        realTop = element * viewRatio;
+                        scrollArea.scrollTop = element;
+                    }
+
                 }
 
                 function mousewheel(ev) {
-                    var deltaY = ev.deltaY !== undefined ? ev.deltaY : ev.detail * 20;
+                    var deltaY = ev.deltaY !== undefined ? ev.deltaY : ev.detail * 40;
 
                     scrollArea.scrollTop += deltaY;
-                    moveTheThumb(deltaY);
+
+                    scrollTo(scrollArea.scrollTop);
                 }
 
                 function calculateThumbHeight() {
-                    var thumbCalculatedHeight = viewRatio * scrollbarViewportHeight;
+                    var thumbCalculatedHeight = viewRatio * scrollWrapperHeight;
 
                     thumb.css({ height: thumbCalculatedHeight + 'px' });
 
                     return thumbCalculatedHeight;
                 }
 
-                function moveTheThumb(param) {
-                    var maxTop = calculateMaxTop(),
-                        oldTop = parseInt(thumb.css('top'), 10),
-                        newTop;
-
-                    /* set the height of the thumb */
-                    thumbHeight = calculateThumbHeight();
-
-                    /* rescale */
-                    param *= viewRatio;
-
-                    oldTop = (oldTop) ? oldTop : 0;
-
-                    newTop = oldTop + param;
-
-                    /* scrolling direction check */
-                    if (param > 0) {
-                        newTop = (newTop > maxTop ? maxTop : newTop) + 'px';
-                    } else {
-                        newTop = (newTop < 0 ? 0 : newTop) + 'px';
-                    }
-
-                    /* Update top position and move the thumb */
-                    thumb.css({ top: newTop });
-                }
-
                 function calculateMaxTop() {
-                    return scrollbarViewportHeight - thumbHeight;
+                    return scrollWrapperHeight - thumbHeight;
                 }
 
                 function startDrag(ev) {
@@ -96,28 +132,19 @@ angular.module('ioki.fatscroll', [])
 
                 function dragStop() {
                     $document.off('mousemove', dragTheThumb);
-                    element.removeClass('no-select');
+                    bodyEl.removeClass('no-select');
                 }
 
                 function dragTheThumb(ev) {
-                    var newTop = (thumbTopStartPos + ev.pageY - dragStartPos),
-                        maxTop;
+                    newTop = (thumbTopStartPos + ev.pageY - dragStartPos);
 
                     thumbHeight = calculateThumbHeight();
-                    maxTop = calculateMaxTop();
 
-                    element.addClass('no-select');
+                    bodyEl.addClass('no-select');
 
-                    if (newTop > maxTop) {
-                        thumb.css('top', maxTop + 'px');
-                    } else if (newTop < 0) {
-                        thumb.css('top', '0');
-                    } else {
-                        thumb.css('top', +(newTop) + 'px');
-                        scrollArea.scrollTop = scrollAreaStartPosition + ((ev.pageY - dragStartPos) / viewRatio);
-                    }
-
+                    scrollTo(scrollAreaStartPosition + ((ev.pageY - dragStartPos) / viewRatio));
                 }
+
             }
         };
     });

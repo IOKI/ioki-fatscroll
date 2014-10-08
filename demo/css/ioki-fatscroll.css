@@ -13,21 +13,22 @@
 /* line 12, ../../src/scss/ioki-fatscroll.scss */
 [fatscroll] thumb {
   display: block;
-  width: 10px;
+  width: 7px;
   height: 50px;
   /* default */
   position: absolute;
   top: 0;
-  right: 0;
+  right: 3px;
   opacity: 0.4;
   background: #000;
 }
 /* line 22, ../../src/scss/ioki-fatscroll.scss */
 [fatscroll] scroll-content {
   display: block;
+  overflow: hidden;
 }
 
-/* line 27, ../../src/scss/ioki-fatscroll.scss */
+/* line 28, ../../src/scss/ioki-fatscroll.scss */
 .no-select {
   -webkit-user-select: none;
   -moz-user-select: none;
