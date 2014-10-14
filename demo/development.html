@@ -18,7 +18,7 @@
         </div>
         <div class="workarea" ng-controller="WorkareaController">
             <!-- Enjoy this space and use it wisely. Good Luck! -->
-            <div fatscroll>
+            <div fatscroll fatscroll-name="firstScroll">
                 <p>FROM HERE...</p>
                 <p>Lorem ipsum dolor sit amet, quo error aperiri recteque ea,
                     quo augue dicunt ut, mei et debet latine.
@@ -67,6 +67,67 @@
 
                 <p>...TO HERE ;)</p>
             </div>
+
+            <div fatscroll fatscroll-name="secondScroll">
+                <p>FROM HERE...</p>
+                <p>Lorem ipsum dolor sit amet, quo error aperiri recteque ea,
+                    quo augue dicunt ut, mei et debet latine.
+                    Ei pri aperiam intellegebat, ludus disputando ius no.
+                    Eos te idque intellegam, usu in elitr conclusionemque.
+                    Vix meis fastidii cu. Usu mutat senserit petentium an.
+                    Timeam intellegat vituperata ex vis, te vel modus explicari.</p>
+
+                <p>Odio diam ex eum, posse lorem harum vix cu.
+                    Est malorum recteque eu, ea volumus vituperatoribus mel,
+                    dico accusata persequeris ex his. Et duo audiam ceteros,
+                    eum magna facete ex, ea partiendo tincidunt conclusionemque sit.
+                    Summo primis in has. Usu congue primis ad, ubique repudiare et sea,
+                    eum an esse voluptatibus. Diam molestiae pro cu, usu sonet delicata et,
+                    utamur bonorum laoreet per et. Has ea ridens repudiandae consectetuer.</p>
+
+                <p>Ius at everti consulatu. No has senserit ocurreret.
+                    Mea eu soleat mnesarchum liberavisse, per graeco consequat at.
+                    Te per discere sanctus vituperatoribus,
+                    phaedrum contentiones definitionem nam at,
+                    vel tation audire imperdiet eu. Civibus placerat ad eum,
+                    at eam laoreet assueverit, ei verterem detraxit accusamus duo.
+                    Quo libris accusata forensibus an, te magna invenire percipitur vim.
+                    Eirmod luptatum qualisque ne pro, sit assentior deseruisse efficiendi ne,
+                    est eu omnes albucius.</p>
+
+                <p>Ius at everti consulatu. No has senserit ocurreret.
+                    Mea eu soleat mnesarchum liberavisse, per graeco consequat at.
+                    Te per discere sanctus vituperatoribus,
+                    phaedrum contentiones definitionem nam at,
+                    vel tation audire imperdiet eu. Civibus placerat ad eum,
+                    at eam laoreet assueverit, ei verterem detraxit accusamus duo.
+                    Quo libris accusata forensibus an, te magna invenire percipitur vim.
+                    Eirmod luptatum qualisque ne pro, sit assentior deseruisse efficiendi ne,
+                    est eu omnes albucius.</p>
+
+                <p>Ius at everti consulatu. No has senserit ocurreret.
+                    Mea eu soleat mnesarchum liberavisse, per graeco consequat at.
+                    Te per discere sanctus vituperatoribus,
+                    phaedrum contentiones definitionem nam at,
+                    vel tation audire imperdiet eu. Civibus placerat ad eum,
+                    at eam laoreet assueverit, ei verterem detraxit accusamus duo.
+                    Quo libris accusata forensibus an, te magna invenire percipitur vim.
+                    Eirmod luptatum qualisque ne pro, sit assentior deseruisse efficiendi ne,
+                    est eu omnes albucius.</p>
+
+                <p>...TO HERE ;)</p>
+            </div>
+            <div class="scrollPicker">
+                <label>pick a scroll
+                    <select ng-model="currentScroll" ng-options="scroll.name for scroll in scrolls"></select>
+                </label>
+                <label>type offset
+                    <input type="text" ng-model="scrollVal"/>
+                </label>
+                <label>move the scroll
+                    <button ng-click="scrollTo()">Move</button>
+                </label>
+            </div>
         </div>
     </div>
 
@@ -76,6 +137,7 @@
     <script src="js/workarea-controller.js"></script>
 
     <script src="../src/js/ioki-fatscroll-directive.js"></script>
+    <script src="../src/js/ioki-fatscroll-service.js"></script>
     <script src="../src/js/ioki-fatscroll.tpl.html.js"></script>
 </body>
 </html>

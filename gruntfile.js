@@ -46,6 +46,7 @@ module.exports = function(grunt) {
             dist: {
                 src: [
                     'src/js/ioki-fatscroll-directive.js',
+                    'src/js/ioki-fatscroll-service.js',
                     'src/js/ioki-fatscroll.tpl.html.js'
                 ],
                 dest: 'ioki-fatscroll.js'

@@ -1,13 +1,14 @@
 angular.module('ioki.fatscroll', [])
-    .directive('fatscroll', function ($document) {
+    .directive('fatscroll', ['$document','fatscrollsService',function ($document, fatscrollsService) {
         'use strict';
 
         return {
             restrict: 'A',
             transclude: true,
             templateUrl: 'templates/ioki-fatscroll',
+            scope: {},
 
-            link: function (scope, element) {
+            link: function (scope, element, attrs) {
 
                 var scrollWrapper, scrollWrapperHeight,
 
@@ -44,6 +45,8 @@ angular.module('ioki.fatscroll', [])
                 });
 
                 function init() {
+                    addScrollToList();
+
                     scrollWrapper = element[0];
                     scrollWrapperHeight = element[0].clientHeight;
 
@@ -70,10 +73,20 @@ angular.module('ioki.fatscroll', [])
 
                 }
 
+                function addScrollToList() {
+                    var scrollName = attrs.fatscrollName;
+
+                    if (scrollName !== undefined) {
+                        fatscrollsService.addFatscroll(scrollName, scope);
+                    }
+                }
+
                 function scrollTo(element, additionalOffset) {
                     var maxTopThumb = calculateMaxTop();
 
                     maxTop = parseInt(maxTopThumb / viewRatio, 10);
+
+                    element = parseInt(element, 10);
 
                     if (typeof element !== 'number') {
 
@@ -118,6 +131,8 @@ angular.module('ioki.fatscroll', [])
                 }
 
                 function calculateMaxTop() {
+                    thumbHeight = calculateThumbHeight();
+
                     return scrollWrapperHeight - thumbHeight;
                 }
 
@@ -145,9 +160,57 @@ angular.module('ioki.fatscroll', [])
                     scrollTo(scrollAreaStartPosition + ((ev.pageY - dragStartPos) / viewRatio));
                 }
 
+                scope.scrollTo = scrollTo;
+
             }
         };
+    }]);
+angular.module('ioki.fatscroll')
+    .factory('fatscrollsService', function () {
+        'use strict';
+
+        var fatscrollsService = {
+            fatscrolls: [],
+
+            getFatscrolls: function () {
+                return fatscrollsService.fatscrolls;
+            },
+
+            getFatscroll: function (name) {
+                for (var i = 0, len = fatscrollsService.fatscrolls.length; i < len; i++) {
+                    if (fatscrollsService.fatscrolls[i].name === name) {
+                        return fatscrollsService.fatscrolls[i].scope;
+                    }
+                }
+
+                return null;
+            },
+
+            addFatscroll: function (name, scope) {
+
+                if (name !== undefined && scope !== undefined) {
+                    fatscrollsService.fatscrolls.push({
+                        name: name,
+                        scope: scope
+                    });
+                }
+
+            },
+
+            moveMeTo: function (name, element, additionalOffset) {
+                var scroll = fatscrollsService.getFatscroll(name);
+
+                if (scroll !== null) {
+                    scroll.scrollTo(element, additionalOffset);
+                }
+
+            }
+        };
+
+        return fatscrollsService;
     });
+
+
 angular.module('ioki.fatscroll').run(['$templateCache', function($templateCache) {
   'use strict';
 

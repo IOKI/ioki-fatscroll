@@ -17,6 +17,7 @@ body {
 
 [fatscroll] {
     background-color: #fff;
+    margin-bottom: 2em;
 }
 
 [fatscroll] scroll-area {
@@ -27,4 +28,25 @@ scroll-content {
     font-family: Verdana, Arial, Helvetica, sans-serif;
     line-height: 1.5em;
     padding: 1em;
+}
+
+.scrollPicker {
+    color: #fff;
+}
+
+label {
+    display: block;
+    float: left;
+    width: 33.33%;
+    text-align: center;
+}
+
+button {
+    background-color: #e77a2c;
+    border: 1px solid #F88E2C;
+    padding: 3px 10px;
+}
+
+select, input {
+    color: #000;
 }
