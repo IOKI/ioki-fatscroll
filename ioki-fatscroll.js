@@ -1,5 +1,5 @@
-angular.module('ioki.fatscroll', [])
-    .directive('fatscroll', ['$document','fatscrollsService',function ($document, fatscrollsService) {
+angular.module('ioki.fatscroll', ['ngAnimate'])
+    .directive('fatscroll', ['$document','fatscrollsService', '$animate','$timeout', function ($document, fatscrollsService, $animate, $timeout) {
         'use strict';
 
         return {
@@ -46,7 +46,7 @@ angular.module('ioki.fatscroll', [])
 
                 function init() {
                     addScrollToList();
-
+                    showScroll();
                     scrollWrapper = element[0];
                     scrollWrapperHeight = element[0].clientHeight;
 
@@ -71,6 +71,16 @@ angular.module('ioki.fatscroll', [])
                         thumb.css('display', 'block');
                     }
 
+                }
+
+                function showScroll() {
+                    $animate.addClass(thumb, 'visible').then(function () {
+                        $timeout(hideScroll, 4000);
+                    });
+                }
+
+                function hideScroll() {
+                    thumb.removeClass('visible');
                 }
 
                 function addScrollToList() {

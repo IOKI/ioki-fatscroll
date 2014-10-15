@@ -1,5 +1,5 @@
 angular.module('ioki.fatscroll', [])
-    .directive('fatscroll', ['$document','fatscrollsService',function ($document, fatscrollsService) {
+    .directive('fatscroll', ['$document', '$timeout', 'fatscrollsService', function ($document, $timeout, fatscrollsService) {
         'use strict';
 
         return {
@@ -26,7 +26,9 @@ angular.module('ioki.fatscroll', [])
 
                     newTop, maxTop,
 
-                    realTop = 0;
+                    realTop = 0,
+
+                    hide;
 
                 scope.scrollContentHeight = element.find('scroll-content')[0];
 
@@ -35,8 +37,12 @@ angular.module('ioki.fatscroll', [])
                 element.on('DOMMouseScroll', mousewheel);
                 thumb.on('mousedown touchstart', startDrag);
 
+                /* Initialize */
                 init();
-
+                /*
+                    Watch for the changes in the content height and if there are any
+                    run init method again to get proper element heights
+                 */
                 scope.$watch('scrollContentHeight.clientHeight', function (newVal, oldVal) {
                     /* re-init when content is loaded */
                     if (newVal !== oldVal) {
@@ -44,9 +50,19 @@ angular.module('ioki.fatscroll', [])
                     }
                 });
 
+                /**
+                 * Method init
+                 *
+                 * Method invokes addScrollToList and showScroll methods,
+                 * gets all the necessary heights and elements,
+                 * so the scrolls can work as intended
+                 */
                 function init() {
+                    /* Add all the scrolls and their scopes to the list  */
                     addScrollToList();
-
+                    /* Show the scrolls */
+                    showScroll();
+                    /* get all the heights and elements needed */
                     scrollWrapper = element[0];
                     scrollWrapperHeight = element[0].clientHeight;
 
@@ -64,7 +80,7 @@ angular.module('ioki.fatscroll', [])
 
                     /* set height of area on the base of the parent element */
                     scrollAreaEl.css('height', scrollWrapperHeight + 'px');
-
+                    /* Check if there's enough content to scroll */
                     if (scrollContentHeight <= scrollWrapperHeight) {
                         thumb.css('display', 'none');
                     } else {
@@ -73,6 +89,33 @@ angular.module('ioki.fatscroll', [])
 
                 }
 
+                /**
+                 * Method showScroll
+                 *
+                 * Method adds the class to the thumb in order to be visible
+                 * then sets the timeout with the method that hides it,
+                 * so if scroll is idle, it disappears
+                 */
+                function showScroll() {
+                    thumb.addClass('visible');
+                    hide = $timeout(hideScroll, 1500);
+                }
+
+                /**
+                 * Method hideScroll
+                 *
+                 * Method removes the class from the thumb, so it can disappear
+                 */
+                function hideScroll() {
+                    thumb.removeClass('visible');
+                }
+
+                /**
+                 * Method addScrollToList
+                 *
+                 * Method adds all the fatscrolls on the view
+                 * as well as their scopes using service method
+                 */
                 function addScrollToList() {
                     var scrollName = attrs.fatscrollName;
 
@@ -81,13 +124,33 @@ angular.module('ioki.fatscroll', [])
                     }
                 }
 
+                /**
+                 * Method scrollTo
+                 *
+                 * Method responsible for all the scrolling
+                 *
+                 * @param element                      - element to which scroll should be moved
+                 * @param additionalOffset             - optional additional offset
+                 */
                 function scrollTo(element, additionalOffset) {
                     var maxTopThumb = calculateMaxTop();
 
-                    maxTop = parseInt(maxTopThumb / viewRatio, 10);
+                    /*
+                        Cancel timeout every time the scroll moves,
+                        so fading effects don't overlap each other
+                        and then run showScroll method
+                     */
+                    $timeout.cancel(hide);
+                    showScroll();
 
+                    maxTop = parseInt(maxTopThumb / viewRatio, 10);
                     element = parseInt(element, 10);
 
+                    /*
+                        Check the type of the passed element.
+                        If the element is not a number the target is a DOM element,
+                        so get its offset
+                     */
                     if (typeof element !== 'number') {
 
                         if (typeof additionalOffset === 'number') {
@@ -97,7 +160,10 @@ angular.module('ioki.fatscroll', [])
                         }
 
                     }
-
+                    /*
+                        Check if element is out of bounds,
+                        if it is, set the thumb position in bounds
+                     */
                     if (element > maxTop) {
                         thumb.css('top', maxTopThumb + 'px');
                         realTop = maxTopThumb;
@@ -114,6 +180,14 @@ angular.module('ioki.fatscroll', [])
 
                 }
 
+                /**
+                 * Method mousewheel
+                 *
+                 * Method gets the delta from the scroll action
+                 * then runs the scrollTo method
+                 *
+                 * @param ev
+                 */
                 function mousewheel(ev) {
                     var deltaY = ev.deltaY !== undefined ? ev.deltaY : ev.detail * 40;
 
@@ -122,6 +196,13 @@ angular.module('ioki.fatscroll', [])
                     scrollTo(scrollArea.scrollTop);
                 }
 
+                /**
+                 * Method calculateThumbHeight
+                 *
+                 * Method returns thumb height depending on the ratio and the wrapper height
+                 *
+                 * @returns {number}
+                 */
                 function calculateThumbHeight() {
                     var thumbCalculatedHeight = viewRatio * scrollWrapperHeight;
 
@@ -130,12 +211,28 @@ angular.module('ioki.fatscroll', [])
                     return thumbCalculatedHeight;
                 }
 
+                /**
+                 * Method calculateMaxTop
+                 *
+                 * Method returns the max top position for the thumb,
+                 * so it stops within viewport boundaries
+                 *
+                 * @returns {number}
+                 */
                 function calculateMaxTop() {
                     thumbHeight = calculateThumbHeight();
 
                     return scrollWrapperHeight - thumbHeight;
                 }
 
+                /**
+                 * Method startDrag
+                 *
+                 * Method attaches listeners for dragging and stop dragging the thumb
+                 * and gets the starting position for dragging
+                 *
+                 * @param ev
+                 */
                 function startDrag(ev) {
                     dragStartPos = ev.y || ev.clientY;
                     thumbTopStartPos = parseInt(thumb.css('top') || 0, 10);
@@ -145,11 +242,24 @@ angular.module('ioki.fatscroll', [])
                     $document.on('mouseup', dragStop);
                 }
 
+                /**
+                 * Method dragStop
+                 *
+                 * Method removes the event handler responsible for dragging
+                 */
                 function dragStop() {
                     $document.off('mousemove', dragTheThumb);
                     bodyEl.removeClass('no-select');
                 }
 
+                /**
+                 * Method dragTheThumb
+                 *
+                 * Method turns off the selection on the whole document
+                 * and drags the thumb within the viewport
+                 *
+                 * @param ev
+                 */
                 function dragTheThumb(ev) {
                     newTop = (thumbTopStartPos + ev.pageY - dragStartPos);
 

@@ -1,16 +1,16 @@
-/* line 3, ../../src/scss/ioki-fatscroll.scss */
+/* line 4, ../../src/scss/ioki-fatscroll.scss */
 [fatscroll] {
   overflow: hidden;
   position: relative;
 }
-/* line 6, ../../src/scss/ioki-fatscroll.scss */
+/* line 7, ../../src/scss/ioki-fatscroll.scss */
 [fatscroll] scroll-area {
   position: relative;
   display: block;
   overflow: hidden;
   height: inherit;
 }
-/* line 12, ../../src/scss/ioki-fatscroll.scss */
+/* line 13, ../../src/scss/ioki-fatscroll.scss */
 [fatscroll] thumb {
   display: block;
   width: 7px;
@@ -19,18 +19,72 @@
   position: absolute;
   top: 0;
   right: 3px;
-  opacity: 0.4;
   background: #000;
+  -moz-transition-property: opacity;
+  -o-transition-property: opacity;
+  -webkit-transition-property: opacity;
+  transition-property: opacity;
+  -moz-transition-duration: 0.5s;
+  -o-transition-duration: 0.5s;
+  -webkit-transition-duration: 0.5s;
+  transition-duration: 0.5s;
+  opacity: 0;
 }
-/* line 22, ../../src/scss/ioki-fatscroll.scss */
+/* line 24, ../../src/scss/ioki-fatscroll.scss */
+[fatscroll] thumb.visible {
+  -moz-transition-property: opacity;
+  -o-transition-property: opacity;
+  -webkit-transition-property: opacity;
+  transition-property: opacity;
+  -moz-transition-duration: 0.5s;
+  -o-transition-duration: 0.5s;
+  -webkit-transition-duration: 0.5s;
+  transition-duration: 0.5s;
+  opacity: 0.4;
+}
+/* line 31, ../../src/scss/ioki-fatscroll.scss */
 [fatscroll] scroll-content {
   display: block;
   overflow: hidden;
 }
 
-/* line 28, ../../src/scss/ioki-fatscroll.scss */
+/* line 37, ../../src/scss/ioki-fatscroll.scss */
 .no-select {
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
   -webkit-user-select: none;
-  -moz-user-select: none;
   user-select: none;
+}
+
+@-webkit-keyframes alertAppear {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-moz-keyframes alertAppear {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-ms-keyframes alertAppear {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes alertAppear {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }

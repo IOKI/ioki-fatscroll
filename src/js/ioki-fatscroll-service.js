@@ -3,12 +3,26 @@ angular.module('ioki.fatscroll')
         'use strict';
 
         var fatscrollsService = {
+            /* Array with all the scrolls */
             fatscrolls: [],
 
+            /**
+             * Method getFatscrolls
+             *
+             * @returns {*}
+             */
             getFatscrolls: function () {
                 return fatscrollsService.fatscrolls;
             },
 
+            /**
+             * Method getFatscroll
+             *
+             * Method gets the selected fatscroll from the list of fatscrolls
+             *
+             * @param name
+             * @returns {*}
+             */
             getFatscroll: function (name) {
                 for (var i = 0, len = fatscrollsService.fatscrolls.length; i < len; i++) {
                     if (fatscrollsService.fatscrolls[i].name === name) {
@@ -19,6 +33,15 @@ angular.module('ioki.fatscroll')
                 return null;
             },
 
+            /**
+             * Method addFatscroll
+             *
+             * Method adds fatscroll as well as its scope
+             * and it pushes it to the fatscrolls array
+             *
+             * @param name
+             * @param scope
+             */
             addFatscroll: function (name, scope) {
 
                 if (name !== undefined && scope !== undefined) {
@@ -30,6 +53,16 @@ angular.module('ioki.fatscroll')
 
             },
 
+            /**
+             * Method moveMeTo
+             *
+             * Method gets the name of the fatscroll,
+             * and moves it where specified according to element and additionalOffset
+             *
+             * @param name                  - name of the fatscroll
+             * @param element               - element to which scroll should move
+             * @param additionalOffset      - optional additional offset
+             */
             moveMeTo: function (name, element, additionalOffset) {
                 var scroll = fatscrollsService.getFatscroll(name);
 
