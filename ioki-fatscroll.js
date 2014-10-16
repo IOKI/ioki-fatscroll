@@ -129,53 +129,52 @@ angular.module('ioki.fatscroll', [])
                  *
                  * Method responsible for all the scrolling
                  *
-                 * @param element                      - element to which scroll should be moved
+                 * @param value                        - place to which scroll should be moved
                  * @param additionalOffset             - optional additional offset
                  */
-                function scrollTo(element, additionalOffset) {
-                    var maxTopThumb = calculateMaxTop();
+                function scrollTo(value, additionalOffset) {
+                    var maxTopThumb = calculateMaxTop(),
+                        newValue;
 
                     /*
-                        Cancel timeout every time the scroll moves,
-                        so fading effects don't overlap each other
-                        and then run showScroll method
+                     Cancel timeout every time the scroll moves,
+                     so fading effects don't overlap each other
+                     and then run showScroll method
                      */
                     $timeout.cancel(hide);
                     showScroll();
 
                     maxTop = parseInt(maxTopThumb / viewRatio, 10);
-                    element = parseInt(element, 10);
+                    value = parseInt(value, 10);
 
                     /*
-                        Check the type of the passed element.
-                        If the element is not a number the target is a DOM element,
-                        so get its offset
+                     If passed value is a DOM element -get its offset,
+                     otherwise get the passed value
                      */
-                    if (typeof element !== 'number') {
+                    newValue = (typeof value !== 'number') ? value.offsetTop : value;
 
-                        if (typeof additionalOffset === 'number') {
-                            element = element.offsetTop + additionalOffset;
-                        } else {
-                            element = element.offsetTop;
-                        }
-
-                    }
                     /*
-                        Check if element is out of bounds,
-                        if it is, set the thumb position in bounds
+                     Check if additionalOffset is a number value,
+                     if not remain newValue as is
                      */
-                    if (element > maxTop) {
+                    newValue = (typeof additionalOffset !== 'number') ? newValue: newValue + additionalOffset;
+
+                    /*
+                     Check if element is out of bounds,
+                     if it is, set the thumb position in bounds
+                     */
+                    if (newValue > maxTop) {
                         thumb.css('top', maxTopThumb + 'px');
                         realTop = maxTopThumb;
                         scrollArea.scrollTop = maxTop;
-                    } else if (element < 0) {
+                    } else if (newValue < 0) {
                         thumb.css('top', '0');
                         realTop = 0;
                         scrollArea.scrollTop = 0;
                     } else {
-                        thumb.css('top', +(element * viewRatio) + 'px');
-                        realTop = element * viewRatio;
-                        scrollArea.scrollTop = element;
+                        thumb.css('top', +(newValue * viewRatio) + 'px');
+                        realTop = newValue * viewRatio;
+                        scrollArea.scrollTop = newValue;
                     }
 
                 }
@@ -337,14 +336,14 @@ angular.module('ioki.fatscroll')
              * and moves it where specified according to element and additionalOffset
              *
              * @param name                  - name of the fatscroll
-             * @param element               - element to which scroll should move
+             * @param value                 - place to which scroll should move
              * @param additionalOffset      - optional additional offset
              */
-            moveMeTo: function (name, element, additionalOffset) {
+            moveMeTo: function (name, value, additionalOffset) {
                 var scroll = fatscrollsService.getFatscroll(name);
 
                 if (scroll !== null) {
-                    scroll.scrollTo(element, additionalOffset);
+                    scroll.scrollTo(value, additionalOffset);
                 }
 
             }

@@ -60,14 +60,14 @@ angular.module('ioki.fatscroll')
              * and moves it where specified according to element and additionalOffset
              *
              * @param name                  - name of the fatscroll
-             * @param element               - element to which scroll should move
+             * @param value                 - place to which scroll should move
              * @param additionalOffset      - optional additional offset
              */
-            moveMeTo: function (name, element, additionalOffset) {
+            moveMeTo: function (name, value, additionalOffset) {
                 var scroll = fatscrollsService.getFatscroll(name);
 
                 if (scroll !== null) {
-                    scroll.scrollTo(element, additionalOffset);
+                    scroll.scrollTo(value, additionalOffset);
                 }
 
             }
