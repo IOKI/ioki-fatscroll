@@ -146,6 +146,10 @@ angular.module('ioki.fatscroll', [])
 
                     maxTop = parseInt(maxTopThumb / viewRatio, 10);
 
+                    if (typeof value === 'string') {
+                        value = parseInt(value, 10);
+                    }
+
                     /*
                      If passed value is a DOM element -get its offset,
                      otherwise get the passed value
