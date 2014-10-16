@@ -1,5 +1,5 @@
 angular.module('ioki.fatscroll', [])
-    .directive('fatscroll', ['$document', '$timeout', 'fatscrollsService', function ($document, $timeout, fatscrollsService) {
+    .directive('fatscroll', ['$window', '$document', '$timeout', 'fatscrollsService', function ($window, $document, $timeout, fatscrollsService) {
         'use strict';
 
         return {
@@ -38,7 +38,18 @@ angular.module('ioki.fatscroll', [])
                 thumb.on('mousedown touchstart', startDrag);
 
                 /* Initialize */
-                init();
+                if (!!attrs.fatscrollDynamic) {
+                    $timeout(function () {
+                        init();
+                    }, 0);
+
+                    angular.element($window).on('resize', function() {
+                        init();
+                    });
+                } else {
+                    init();
+                }
+
                 /*
                     Watch for the changes in the content height and if there are any
                     run init method again to get proper element heights
