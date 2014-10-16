@@ -145,7 +145,6 @@ angular.module('ioki.fatscroll', [])
                     showScroll();
 
                     maxTop = parseInt(maxTopThumb / viewRatio, 10);
-                    value = parseInt(value, 10);
 
                     /*
                      If passed value is a DOM element -get its offset,
