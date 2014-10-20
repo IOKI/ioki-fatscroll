@@ -202,6 +202,9 @@ angular.module('ioki.fatscroll', [])
                  * @param ev
                  */
                 function mousewheel(ev) {
+                    /* Prevent from scrolling whole document */
+                    ev.preventDefault();
+                    
                     var deltaY = ev.deltaY !== undefined ? ev.deltaY : ev.detail * 40;
 
                     scrollArea.scrollTop += deltaY;
