@@ -6,17 +6,25 @@ angular.module('ioki.fatscroll', [])
             restrict: 'A',
             transclude: true,
             templateUrl: 'templates/ioki-fatscroll',
-            scope: {},
+            scope: {
+                alwaysvisible: '=',
+                thumbheight: '=',
+                hasrail: '=',
+                adjustcontenttorail: '='
+            },
 
             link: function (scope, element, attrs) {
+                var scrollWrapper,
 
-                var scrollWrapper, scrollWrapperHeight,
+                    scrollWrapperHeight,
 
                     scrollArea, scrollAreaEl,
 
                     scrollContentHeight,
 
-                    thumb = element.find('thumb'), thumbHeight, thumbTopStartPos,
+                    thumb = element.find('thumb'), thumbHeight,
+
+                    rail = element.find('rail'),
 
                     dragStartPos, scrollAreaStartPosition,
 
@@ -24,18 +32,19 @@ angular.module('ioki.fatscroll', [])
 
                     bodyEl = $document.find('body'),
 
-                    newTop, maxTop,
+                    isFixed = scope.thumbheight ? true : false,
 
-                    realTop = 0,
-
-                    hide;
+                    hide, maxTop;
 
                 scope.scrollContentHeight = element.find('scroll-content')[0];
 
                 /* Add listeners */
                 element.on('mousewheel', mousewheel);
                 element.on('DOMMouseScroll', mousewheel);
+                element.on('wheel', mousewheel);
+
                 thumb.on('mousedown touchstart', startDrag);
+                rail.on('click', clickOnRail);
 
                 /* Initialize */
                 if (!!attrs.fatscrollDynamic) {
@@ -73,14 +82,15 @@ angular.module('ioki.fatscroll', [])
                     addScrollToList();
                     /* Show the scrolls */
                     showScroll();
+
                     /* get all the heights and elements needed */
                     scrollWrapper = element[0];
-                    scrollWrapperHeight = element[0].clientHeight;
 
                     scrollArea = scrollWrapper.firstChild;
                     scrollAreaEl = element.find('scroll-area');
 
                     scrollContentHeight = element.find('scroll-content')[0].clientHeight;
+                    scrollWrapperHeight = element.find('scroll-area')[0].clientHeight;
 
                     viewRatio = scrollWrapperHeight / scrollContentHeight;
 
@@ -89,15 +99,49 @@ angular.module('ioki.fatscroll', [])
                     /* Adjust thumb height to the content size */
                     calculateThumbHeight();
 
-                    /* set height of area on the base of the parent element */
-                    scrollAreaEl.css('height', scrollWrapperHeight + 'px');
                     /* Check if there's enough content to scroll */
+
                     if (scrollContentHeight <= scrollWrapperHeight) {
                         thumb.css('display', 'none');
+                        hideRail();
                     } else {
                         thumb.css('display', 'block');
+                        showRail();
+                    }
+                    scrollTo(scrollArea.scrollTop);
+                }
+
+                /**
+                 * Method showRail
+                 *
+                 * Method show rail if is set, and also if rail is inside the
+                 * scroll area it set up width to default
+                 */
+                function showRail() {
+                    if (scope.hasrail) {
+                        rail.css('display', 'block');
+
+                        if (scope.adjustcontenttorail) {
+                            scrollAreaEl.css('width', '');
+                        }
                     }
 
+                }
+
+                /**
+                 * Method hideRail
+                 *
+                 * Method hide rail, and also if rail is inside the
+                 * scroll area it set up width to auto
+                 */
+                function hideRail() {
+                    if (scope.hasrail) {
+                        rail.css('display', 'none');
+
+                        if (scope.adjustcontenttorail) {
+                            scrollAreaEl.css('width', 'auto');
+                        }
+                    }
                 }
 
                 /**
@@ -105,11 +149,14 @@ angular.module('ioki.fatscroll', [])
                  *
                  * Method adds the class to the thumb in order to be visible
                  * then sets the timeout with the method that hides it,
-                 * so if scroll is idle, it disappears
+                 * so if scroll is idle, it disappears, if you set attribute
+                 * scroll can be always visible
                  */
                 function showScroll() {
                     thumb.addClass('visible');
-                    hide = $timeout(hideScroll, 1500);
+                    if (!scope.alwaysvisible) {
+                        hide = $timeout(hideScroll, 1500);
+                    }
                 }
 
                 /**
@@ -145,7 +192,10 @@ angular.module('ioki.fatscroll', [])
                  */
                 function scrollTo(value, additionalOffset) {
                     var maxTopThumb = calculateMaxTop(),
-                        newValue;
+                        newValue,
+                        thumbHeight,
+                        fixedThumb,
+                        condition;
 
                     /*
                      Cancel timeout every time the scroll moves,
@@ -173,24 +223,31 @@ angular.module('ioki.fatscroll', [])
                      */
                     newValue = (typeof additionalOffset !== 'number') ? newValue: newValue + additionalOffset;
 
+                    thumbHeight = calculateThumbHeight();
+
+                    /*
+                        Calculation for fixed thumb, height of thumb is fixed so,
+                        when you scroll, the scrollbar should move faster or slower,
+                        depending on content
+                     */
+                    fixedThumb = newValue * viewRatio * ((scrollContentHeight)/(scrollContentHeight-scrollWrapperHeight))*(1-(thumbHeight/scrollWrapperHeight));
+
+                    condition = isFixed ? fixedThumb > maxTopThumb : newValue > maxTop;
+
                     /*
                      Check if element is out of bounds,
                      if it is, set the thumb position in bounds
                      */
-                    if (newValue > maxTop) {
+                    if (condition) {
                         thumb.css('top', maxTopThumb + 'px');
-                        realTop = maxTopThumb;
                         scrollArea.scrollTop = maxTop;
-                    } else if (newValue < 0) {
+                    } else if (newValue < 0 || fixedThumb < 0) {
                         thumb.css('top', '0');
-                        realTop = 0;
                         scrollArea.scrollTop = 0;
                     } else {
-                        thumb.css('top', +(newValue * viewRatio) + 'px');
-                        realTop = newValue * viewRatio;
+                        thumb.css('top', +(isFixed ? fixedThumb : newValue * viewRatio) + 'px');
                         scrollArea.scrollTop = newValue;
                     }
-
                 }
 
                 /**
@@ -206,7 +263,6 @@ angular.module('ioki.fatscroll', [])
                     ev.preventDefault();
 
                     var deltaY = ev.deltaY !== undefined ? ev.deltaY : ev.detail * 40;
-
                     scrollArea.scrollTop += deltaY;
 
                     scrollTo(scrollArea.scrollTop);
@@ -220,7 +276,9 @@ angular.module('ioki.fatscroll', [])
                  * @returns {number}
                  */
                 function calculateThumbHeight() {
-                    var thumbCalculatedHeight = viewRatio * scrollWrapperHeight;
+                    var thumbCalculatedHeight;
+
+                    thumbCalculatedHeight = scope.thumbheight ? scope.thumbheight : viewRatio * scrollWrapperHeight;
 
                     thumb.css({ height: thumbCalculatedHeight + 'px' });
 
@@ -242,6 +300,17 @@ angular.module('ioki.fatscroll', [])
                 }
 
                 /**
+                 * Method clickOnRail
+                 *
+                 * Method to move thumb after click on the rail
+                 *
+                 * @param ev
+                 */
+                function clickOnRail(ev) {
+                    scrollTo(ev.layerY * ((scrollContentHeight-scrollWrapperHeight)/scrollWrapperHeight));
+                }
+
+                /**
                  * Method startDrag
                  *
                  * Method attaches listeners for dragging and stop dragging the thumb
@@ -250,8 +319,10 @@ angular.module('ioki.fatscroll', [])
                  * @param ev
                  */
                 function startDrag(ev) {
-                    dragStartPos = ev.y || ev.clientY;
-                    thumbTopStartPos = parseInt(thumb.css('top') || 0, 10);
+                    /* prevent text selection in IE */
+                    document.onselectstart = function () { return false; };
+
+                    dragStartPos = ev.pageY;
                     scrollAreaStartPosition = scrollArea.scrollTop;
 
                     $document.on('mousemove', dragTheThumb);
@@ -264,6 +335,9 @@ angular.module('ioki.fatscroll', [])
                  * Method removes the event handler responsible for dragging
                  */
                 function dragStop() {
+                    /* turn on text selection in IE */
+                    document.onselectstart = function () { return true; };
+
                     $document.off('mousemove', dragTheThumb);
                     bodyEl.removeClass('no-select');
                 }
@@ -277,13 +351,15 @@ angular.module('ioki.fatscroll', [])
                  * @param ev
                  */
                 function dragTheThumb(ev) {
-                    newTop = (thumbTopStartPos + ev.pageY - dragStartPos);
-
                     thumbHeight = calculateThumbHeight();
 
                     bodyEl.addClass('no-select');
 
-                    scrollTo(scrollAreaStartPosition + ((ev.pageY - dragStartPos) / viewRatio));
+                    if (isFixed) {
+                        scrollTo(scrollAreaStartPosition + ((ev.pageY - dragStartPos) / (calculateMaxTop() / (scrollContentHeight - scrollWrapperHeight))));
+                    } else {
+                        scrollTo(scrollAreaStartPosition + ((ev.pageY - dragStartPos) / viewRatio ));
+                    }
                 }
 
                 scope.scrollTo = scrollTo;

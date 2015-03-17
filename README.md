@@ -1,5 +1,5 @@
-ioki-fatscroll v0.1.6
+ioki-fatscroll v0.2.0
 ==============
 Scroll component for AngularJS. Developed by IOKI Team.
 
-Current Version: 0.1.6
+Current Version: 0.2.0
