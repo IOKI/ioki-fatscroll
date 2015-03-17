@@ -67,12 +67,12 @@ angular.module('ioki.fatscroll')
                 var scroll = fatscrollsService.getFatscroll(name);
 
                 if (scroll !== null) {
-                    scroll.scrollTo(value, additionalOffset);
+                    setTimeout(function() {
+                        scroll.scrollTo(value, additionalOffset);
+                    }, 350);
                 }
-
             }
         };
 
         return fatscrollsService;
     });
-
