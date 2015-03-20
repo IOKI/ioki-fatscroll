@@ -67,10 +67,25 @@ angular.module('ioki.fatscroll')
                 var scroll = fatscrollsService.getFatscroll(name);
 
                 if (scroll !== null) {
-                    setTimeout(function() {
-                        scroll.scrollTo(value, additionalOffset);
-                    }, 350);
+                    scroll.scrollTo(value, additionalOffset);
                 }
+            },
+
+            /**
+             * Method moveMeToWithReload
+             *
+             * Method similar to above but it wait for reinitialization of scrollbar
+             * for example when you use expansible table of content
+             * it jump when you click and scrollContentHeight.clientHeight changes
+             *
+             * @param name                  - name of the fatscroll
+             * @param value                 - place to which scroll should move
+             * @param additionalOffset      - optional additional offset
+             */
+            moveMeToWithInit: function (name, value) {
+                var scroll = fatscrollsService.getFatscroll(name);
+
+                scroll.setClickedElement(value);
             }
         };
 
