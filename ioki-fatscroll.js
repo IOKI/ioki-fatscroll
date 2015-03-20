@@ -2,6 +2,9 @@ angular.module('ioki.fatscroll', [])
     .directive('fatscroll', ['$window', '$document', '$timeout', 'fatscrollsService', function ($window, $document, $timeout, fatscrollsService) {
         'use strict';
 
+        // remember object position when directive is reinitialized (needed by moveMeTo method)
+        var valueToSave;
+
         return {
             restrict: 'A',
             transclude: true,
@@ -12,7 +15,6 @@ angular.module('ioki.fatscroll', [])
                 hasrail: '=',
                 adjustcontenttorail: '='
             },
-
             link: function (scope, element, attrs) {
                 var scrollWrapper,
 
@@ -32,9 +34,11 @@ angular.module('ioki.fatscroll', [])
 
                     bodyEl = $document.find('body'),
 
+                    maxTop,
+
                     isFixed = scope.thumbheight ? true : false,
 
-                    hide, maxTop;
+                    hide, valueToScroll = 0;
 
                 scope.scrollContentHeight = element.find('scroll-content')[0];
 
@@ -108,7 +112,13 @@ angular.module('ioki.fatscroll', [])
                         thumb.css('display', 'block');
                         showRail();
                     }
-                    scrollTo(scrollArea.scrollTop);
+
+                    if (valueToSave) {
+                        scrollTo(valueToSave);
+                        valueToSave = null;
+                    } else {
+                        scrollTo(valueToScroll);
+                    }
                 }
 
                 /**
@@ -175,11 +185,30 @@ angular.module('ioki.fatscroll', [])
                  * as well as their scopes using service method
                  */
                 function addScrollToList() {
-                    var scrollName = attrs.fatscrollName;
+                    var scrollName = attrs.fatscrollName,
+                        searchScroll;
 
                     if (scrollName !== undefined) {
-                        fatscrollsService.addFatscroll(scrollName, scope);
+                        searchScroll = fatscrollsService.getFatscrolls().filter(function ( obj ) {
+                            return obj.name === scrollName;
+                        })[0];
+
+                        if (!searchScroll) {
+                            fatscrollsService.addFatscroll(scrollName, scope);
+                        }
                     }
+                }
+
+                /**
+                 * Method setClickedElement
+                 *
+                 * Method set clicked element, it is used by moveMeToWithInit
+                 * first expand scroll then move to clicked element
+                 *
+                 * @param value - clicked element
+                 */
+                function setClickedElement(value) {
+                    valueToSave = value;
                 }
 
                 /**
@@ -196,6 +225,8 @@ angular.module('ioki.fatscroll', [])
                         thumbHeight,
                         fixedThumb,
                         condition;
+
+                    viewRatio = scrollWrapperHeight / scrollContentHeight;
 
                     /*
                      Cancel timeout every time the scroll moves,
@@ -245,8 +276,9 @@ angular.module('ioki.fatscroll', [])
                         thumb.css('top', '0');
                         scrollArea.scrollTop = 0;
                     } else {
-                        thumb.css('top', +(isFixed ? fixedThumb : newValue * viewRatio) + 'px');
+                        thumb.css('top', (isFixed ? fixedThumb : newValue * viewRatio) + 'px');
                         scrollArea.scrollTop = newValue;
+                        valueToScroll = newValue;
                     }
                 }
 
@@ -363,7 +395,7 @@ angular.module('ioki.fatscroll', [])
                 }
 
                 scope.scrollTo = scrollTo;
-
+                scope.setClickedElement = setClickedElement;
             }
         };
     }]);
@@ -436,10 +468,25 @@ angular.module('ioki.fatscroll')
                 var scroll = fatscrollsService.getFatscroll(name);
 
                 if (scroll !== null) {
-                    setTimeout(function() {
-                        scroll.scrollTo(value, additionalOffset);
-                    }, 350);
+                    scroll.scrollTo(value, additionalOffset);
                 }
+            },
+
+            /**
+             * Method moveMeToWithReload
+             *
+             * Method similar to above but it wait for reinitialization of scrollbar
+             * for example when you use expansible table of content
+             * it jump when you click and scrollContentHeight.clientHeight changes
+             *
+             * @param name                  - name of the fatscroll
+             * @param value                 - place to which scroll should move
+             * @param additionalOffset      - optional additional offset
+             */
+            moveMeToWithInit: function (name, value) {
+                var scroll = fatscrollsService.getFatscroll(name);
+
+                scroll.setClickedElement(value);
             }
         };
 
