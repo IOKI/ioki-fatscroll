@@ -38,7 +38,9 @@ angular.module('ioki.fatscroll', [])
 
                     isFixed = scope.thumbheight ? true : false,
 
-                    hide, valueToScroll = 0;
+                    hide, valueToScroll = 0,
+
+                    start = 0, offset = 0;
 
                 scope.scrollContentHeight = element.find('scroll-content')[0];
 
@@ -46,6 +48,11 @@ angular.module('ioki.fatscroll', [])
                 element.on('mousewheel', mousewheel);
                 element.on('DOMMouseScroll', mousewheel);
                 element.on('wheel', mousewheel);
+
+                /* touch listeners */
+                element.on('touchstart', touchStart);
+                element.on('touchmove', touchWheel);
+                element.on('touchend', touchEnd);
 
                 thumb.on('mousedown touchstart', startDrag);
                 rail.on('click', clickOnRail);
@@ -283,6 +290,42 @@ angular.module('ioki.fatscroll', [])
                 }
 
                 /**
+                 * Method touchStart
+                 *
+                 * Method executed on start action on touch devices
+                 *
+                 * @param e
+                 */
+                function touchStart(ev) {
+                    start = ev.touches[0].pageY + valueToScroll;
+                }
+
+                /**
+                 * Method touchEnd
+                 *
+                 * Method save last value on touch devices
+                 *
+                 * @param e
+                 */
+                function touchEnd() {
+                    valueToScroll = offset;
+                }
+
+                /**
+                 * Method touchMove
+                 *
+                 * Method executed on every move on touch device
+                 *
+                 * @param e
+                 */
+                function touchMove(ev){
+                    offset = start - ev.touches[0].pageY;
+
+                    return offset;
+                }
+
+
+                /**
                  * Method mousewheel
                  *
                  * Method gets the delta from the scroll action
@@ -296,6 +339,23 @@ angular.module('ioki.fatscroll', [])
 
                     var deltaY = ev.deltaY !== undefined ? ev.deltaY : ev.detail * 40;
                     scrollArea.scrollTop += deltaY;
+
+                    scrollTo(scrollArea.scrollTop);
+                }
+
+                /**
+                 * Method touchWheel
+                 *
+                 * Method gets the delta from the scroll action
+                 * then runs the scrollTo method
+                 *
+                 * @param ev
+                 */
+                function touchWheel(ev) {
+                    /* Prevent from scrolling whole document */
+                    ev.preventDefault();
+
+                    scrollArea.scrollTop = touchMove(ev);
 
                     scrollTo(scrollArea.scrollTop);
                 }
