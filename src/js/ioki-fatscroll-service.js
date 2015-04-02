@@ -7,6 +7,11 @@ angular.module('ioki.fatscroll')
             fatscrolls: [],
 
             /**
+             *  Key:value map with elements to scroll on init [tocName: element]
+             */
+            savedPositionObject : {},
+
+            /**
              * Method getFatscrolls
              *
              * @returns {*}
@@ -72,20 +77,18 @@ angular.module('ioki.fatscroll')
             },
 
             /**
-             * Method moveMeToWithReload
+             * Method moveMeOnInit
              *
-             * Method similar to above but it wait for reinitialization of scrollbar
+             * Method similar to moveTo but it wait for reinitialization of scrollbar
              * for example when you use expansible table of content
              * it jump when you click and scrollContentHeight.clientHeight changes
              *
-             * @param name                  - name of the fatscroll
-             * @param value                 - place to which scroll should move
-             * @param additionalOffset      - optional additional offset
+             * @param name
+             * @param element
+             * @param offset [offset = 0]
              */
-            moveMeToWithInit: function (name, value) {
-                var scroll = fatscrollsService.getFatscroll(name);
-
-                scroll.setClickedElement(value);
+            moveMeToOnInit: function (name, element, offset) {
+                this.savedPositionObject[name] = {element: element, offset: offset || 0};
             }
         };
 
