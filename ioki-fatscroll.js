@@ -2,9 +2,6 @@ angular.module('ioki.fatscroll', [])
     .directive('fatscroll', ['$window', '$document', '$timeout', 'fatscrollsService', function ($window, $document, $timeout, fatscrollsService) {
         'use strict';
 
-        // remember object position when directive is reinitialized (needed by moveMeTo method)
-        var valueToSave;
-
         return {
             restrict: 'A',
             transclude: true,
@@ -89,6 +86,7 @@ angular.module('ioki.fatscroll', [])
                  * so the scrolls can work as intended
                  */
                 function init() {
+                    var savedPositionObject = fatscrollsService.savedPositionObject[attrs.fatscrollName];
                     /* Add all the scrolls and their scopes to the list  */
                     addScrollToList();
                     /* Show the scrolls */
@@ -120,10 +118,10 @@ angular.module('ioki.fatscroll', [])
                         showRail();
                     }
 
-                    if (valueToSave) {
-                        scrollTo(valueToSave);
-                        valueToSave = null;
-                    } else {
+                    if (savedPositionObject) {
+                        scrollTo(savedPositionObject.element, savedPositionObject.offset);
+                        delete fatscrollsService.savedPositionObject[attrs.fatscrollName];
+                    } else { // For IE9 bug
                         scrollTo(valueToScroll);
                     }
                 }
@@ -204,18 +202,6 @@ angular.module('ioki.fatscroll', [])
                             fatscrollsService.addFatscroll(scrollName, scope);
                         }
                     }
-                }
-
-                /**
-                 * Method setClickedElement
-                 *
-                 * Method set clicked element, it is used by moveMeToWithInit
-                 * first expand scroll then move to clicked element
-                 *
-                 * @param value - clicked element
-                 */
-                function setClickedElement(value) {
-                    valueToSave = value;
                 }
 
                 /**
@@ -455,7 +441,6 @@ angular.module('ioki.fatscroll', [])
                 }
 
                 scope.scrollTo = scrollTo;
-                scope.setClickedElement = setClickedElement;
             }
         };
     }]);
@@ -466,6 +451,11 @@ angular.module('ioki.fatscroll')
         var fatscrollsService = {
             /* Array with all the scrolls */
             fatscrolls: [],
+
+            /**
+             *  Key:value map with elements to scroll on init [tocName: element]
+             */
+            savedPositionObject : {},
 
             /**
              * Method getFatscrolls
@@ -533,20 +523,18 @@ angular.module('ioki.fatscroll')
             },
 
             /**
-             * Method moveMeToWithReload
+             * Method moveMeOnInit
              *
-             * Method similar to above but it wait for reinitialization of scrollbar
+             * Method similar to moveTo but it wait for reinitialization of scrollbar
              * for example when you use expansible table of content
              * it jump when you click and scrollContentHeight.clientHeight changes
              *
-             * @param name                  - name of the fatscroll
-             * @param value                 - place to which scroll should move
-             * @param additionalOffset      - optional additional offset
+             * @param name
+             * @param element
+             * @param offset [offset = 0]
              */
-            moveMeToWithInit: function (name, value) {
-                var scroll = fatscrollsService.getFatscroll(name);
-
-                scroll.setClickedElement(value);
+            moveMeToOnInit: function (name, element, offset) {
+                this.savedPositionObject[name] = {element: element, offset: offset || 0};
             }
         };
 
