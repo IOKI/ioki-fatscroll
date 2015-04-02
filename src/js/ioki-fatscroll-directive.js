@@ -2,9 +2,6 @@ angular.module('ioki.fatscroll', [])
     .directive('fatscroll', ['$window', '$document', '$timeout', 'fatscrollsService', function ($window, $document, $timeout, fatscrollsService) {
         'use strict';
 
-        // remember object position when directive is reinitialized (needed by moveMeTo method)
-        var valueToSave;
-
         return {
             restrict: 'A',
             transclude: true,
@@ -89,6 +86,7 @@ angular.module('ioki.fatscroll', [])
                  * so the scrolls can work as intended
                  */
                 function init() {
+                    var savedPositionObject = fatscrollsService.savedPositionObject[attrs.fatscrollName];
                     /* Add all the scrolls and their scopes to the list  */
                     addScrollToList();
                     /* Show the scrolls */
@@ -120,10 +118,10 @@ angular.module('ioki.fatscroll', [])
                         showRail();
                     }
 
-                    if (valueToSave) {
-                        scrollTo(valueToSave);
-                        valueToSave = null;
-                    } else {
+                    if (savedPositionObject) {
+                        scrollTo(savedPositionObject.element, savedPositionObject.offset);
+                        delete fatscrollsService.savedPositionObject[attrs.fatscrollName];
+                    } else { // For IE9 bug
                         scrollTo(valueToScroll);
                     }
                 }
@@ -204,18 +202,6 @@ angular.module('ioki.fatscroll', [])
                             fatscrollsService.addFatscroll(scrollName, scope);
                         }
                     }
-                }
-
-                /**
-                 * Method setClickedElement
-                 *
-                 * Method set clicked element, it is used by moveMeToWithInit
-                 * first expand scroll then move to clicked element
-                 *
-                 * @param value - clicked element
-                 */
-                function setClickedElement(value) {
-                    valueToSave = value;
                 }
 
                 /**
@@ -455,7 +441,6 @@ angular.module('ioki.fatscroll', [])
                 }
 
                 scope.scrollTo = scrollTo;
-                scope.setClickedElement = setClickedElement;
             }
         };
     }]);
