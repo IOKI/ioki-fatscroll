@@ -1,5 +1,5 @@
 angular.module('ioki.fatscroll', [])
-    .directive('fatscroll', ['$window', '$document', '$timeout', 'fatscrollsService', function ($window, $document, $timeout, fatscrollsService) {
+    .directive('fatscroll', ['$window', '$document', '$timeout', '$interval', 'fatscrollsService', function ($window, $document, $timeout, $interval, fatscrollsService) {
         'use strict';
 
         return {
@@ -13,33 +13,26 @@ angular.module('ioki.fatscroll', [])
                 adjustcontenttorail: '='
             },
             link: function (scope, element, attrs) {
-                var scrollWrapper,
-
+                var bodyEl = $document.find('body'),
+                    scrollWrapper,
                     scrollWrapperHeight,
-
                     scrollArea, scrollAreaEl,
+                    scrollContentHeight;
 
-                    scrollContentHeight,
+                var thumb = element.find('thumb'), thumbHeight,
+                    rail = element.find('rail');
 
-                    thumb = element.find('thumb'), thumbHeight,
+                var scrollPos,
+                    dragStartPos,
+                    scrollAreaStartPosition,
+                    touchStartPos = 0,
+                    touchMoveOffset = 0,
+                    valueToScroll = 0;
 
-                    rail = element.find('rail'),
-
-                    dragStartPos, scrollAreaStartPosition,
-
+                var isFixed = scope.thumbheight ? true : false,
                     viewRatio,
-
-                    bodyEl = $document.find('body'),
-
-                    maxTop,
-
-                    isFixed = scope.thumbheight ? true : false,
-
-                    hide, valueToScroll = 0,
-
-                    start = 0, offset = 0;
-
-                scope.scrollContentHeight = element.find('scroll-content')[0];
+                    hideTimeout,
+                    reInitInterval;
 
                 /* Add listeners */
                 element.on('mousewheel', mousewheel);
@@ -56,26 +49,37 @@ angular.module('ioki.fatscroll', [])
 
                 /* Initialize */
                 if (!!attrs.fatscrollDynamic) {
-                    $timeout(function () {
-                        init();
-                    }, 0);
-
-                    angular.element($window).on('resize', function() {
-                        init();
-                    });
+                    /*
+                     Interval that looks for changes in fatscroll content container's height.
+                     */
+                    reInitInterval = $interval(function () {
+                        /*
+                         In this moment value of scrollContentHeight is cached (not refreshed, last known).
+                         If scroll-content container changed its height we need to run reinitialization (scrollContentHeight will be updated in init function).
+                         */
+                        if (scrollContentHeight !== element.find('scroll-content')[0].clientHeight) {
+                            /* Add all the scrolls and their scopes to the list  */
+                            init(scrollPos);
+                        }
+                    }, 100);
                 } else {
                     init();
                 }
 
-                /*
-                    Watch for the changes in the content height and if there are any
-                    run init method again to get proper element heights
-                 */
-                scope.$watch('scrollContentHeight.clientHeight', function (newVal, oldVal) {
-                    /* re-init when content is loaded */
-                    if (newVal !== oldVal) {
-                        init();
-                    }
+                /* DESTRUCTOR */
+                scope.$on('$destroy', function () {
+                    fatscrollsService.removeFatscroll(attrs.fatscrollName);
+                    $interval.cancel(reInitInterval);
+
+                    element.off('mousewheel', mousewheel);
+                    element.off('DOMMouseScroll', mousewheel);
+                    element.off('wheel', mousewheel);
+                    element.off('touchstart', touchStart);
+                    element.off('touchmove', touchWheel);
+                    element.off('touchend', touchEnd);
+
+                    thumb.off('mousedown touchstart', startDrag);
+                    rail.off('click', clickOnRail);
                 });
 
                 /**
@@ -84,9 +88,14 @@ angular.module('ioki.fatscroll', [])
                  * Method invokes addScrollToList and showScroll methods,
                  * gets all the necessary heights and elements,
                  * so the scrolls can work as intended
+                 *
+                 * @param {Number} [scrollToPos] - Optional scroll position after init.
                  */
-                function init() {
+                function init(scrollToPos) {
                     var savedPositionObject = fatscrollsService.savedPositionObject[attrs.fatscrollName];
+
+                    scrollToPos = scrollToPos || 0;
+
                     /* Add all the scrolls and their scopes to the list  */
                     addScrollToList();
                     /* Show the scrolls */
@@ -109,7 +118,6 @@ angular.module('ioki.fatscroll', [])
                     calculateThumbHeight();
 
                     /* Check if there's enough content to scroll */
-
                     if (scrollContentHeight <= scrollWrapperHeight) {
                         thumb.css('display', 'none');
                         hideRail();
@@ -122,7 +130,7 @@ angular.module('ioki.fatscroll', [])
                         scrollTo(savedPositionObject.element, savedPositionObject.offset);
                         delete fatscrollsService.savedPositionObject[attrs.fatscrollName];
                     } else { // For IE9 bug
-                        scrollTo(valueToScroll);
+                        scrollTo(scrollToPos);
                     }
                 }
 
@@ -170,7 +178,7 @@ angular.module('ioki.fatscroll', [])
                 function showScroll() {
                     thumb.addClass('visible');
                     if (!scope.alwaysvisible) {
-                        hide = $timeout(hideScroll, 1500);
+                        hideTimeout = $timeout(hideScroll, 1500);
                     }
                 }
 
@@ -213,7 +221,8 @@ angular.module('ioki.fatscroll', [])
                  * @param additionalOffset             - optional additional offset
                  */
                 function scrollTo(value, additionalOffset) {
-                    var maxTopThumb = calculateMaxTop(),
+                    var maxTop,
+                        maxTopThumb = calculateMaxTop(),
                         newValue,
                         thumbHeight,
                         fixedThumb,
@@ -226,7 +235,7 @@ angular.module('ioki.fatscroll', [])
                      so fading effects don't overlap each other
                      and then run showScroll method
                      */
-                    $timeout.cancel(hide);
+                    $timeout.cancel(hideTimeout);
                     showScroll();
 
                     maxTop = parseInt(maxTopThumb / viewRatio, 10);
@@ -236,7 +245,7 @@ angular.module('ioki.fatscroll', [])
                     }
 
                     /*
-                     If passed value is a DOM element -get its offset,
+                     If passed value is a DOM element - get its offset,
                      otherwise get the passed value
                      */
                     newValue = (typeof value !== 'number') ? value.offsetTop : value;
@@ -247,12 +256,14 @@ angular.module('ioki.fatscroll', [])
                      */
                     newValue = (typeof additionalOffset !== 'number') ? newValue: newValue + additionalOffset;
 
+                    scrollPos = newValue;
+
                     thumbHeight = calculateThumbHeight();
 
                     /*
-                        Calculation for fixed thumb, height of thumb is fixed so,
-                        when you scroll, the scrollbar should move faster or slower,
-                        depending on content
+                     Calculation for fixed thumb, height of thumb is fixed so,
+                     when you scroll, the scrollbar should move faster or slower,
+                     depending on content
                      */
                     fixedThumb = newValue * viewRatio * ((scrollContentHeight)/(scrollContentHeight-scrollWrapperHeight))*(1-(thumbHeight/scrollWrapperHeight));
 
@@ -280,10 +291,10 @@ angular.module('ioki.fatscroll', [])
                  *
                  * Method executed on start action on touch devices
                  *
-                 * @param e
+                 * @param ev
                  */
                 function touchStart(ev) {
-                    start = ev.touches[0].pageY + valueToScroll;
+                    touchStartPos = ev.touches[0].pageY + valueToScroll;
                 }
 
                 /**
@@ -291,10 +302,9 @@ angular.module('ioki.fatscroll', [])
                  *
                  * Method save last value on touch devices
                  *
-                 * @param e
                  */
                 function touchEnd() {
-                    valueToScroll = offset;
+                    valueToScroll = touchMoveOffset;
                 }
 
                 /**
@@ -302,12 +312,12 @@ angular.module('ioki.fatscroll', [])
                  *
                  * Method executed on every move on touch device
                  *
-                 * @param e
+                 * @param ev
                  */
                 function touchMove(ev){
-                    offset = start - ev.touches[0].pageY;
+                    touchMoveOffset = touchStartPos - ev.touches[0].pageY;
 
-                    return offset;
+                    return touchMoveOffset;
                 }
 
 
@@ -417,6 +427,7 @@ angular.module('ioki.fatscroll', [])
                     document.onselectstart = function () { return true; };
 
                     $document.off('mousemove', dragTheThumb);
+                    $document.off('mouseup', dragStop);
                     bodyEl.removeClass('no-select');
                 }
 

@@ -18,6 +18,8 @@
         </div>
         <div class="workarea" ng-controller="WorkareaController">
             <!-- Enjoy this space and use it wisely. Good Luck! -->
+            <h2>Static Scrolls</h2>
+            <h3>Default scroll</h3>
             <div fatscroll fatscroll-name="firstScroll">
                 <p>FROM HERE...</p>
                 <p>Lorem ipsum dolor sit amet, quo error aperiri recteque ea,
@@ -67,8 +69,8 @@
 
                 <p>...TO HERE ;)</p>
             </div>
-
-            <div fatscroll fatscroll-name="secondScroll">
+            <h3>Always visible scroll</h3>
+            <div fatscroll fatscroll-name="secondScroll" alwaysvisible="true">
                 <p>FROM HERE...</p>
                 <p>Lorem ipsum dolor sit amet, quo error aperiri recteque ea,
                     quo augue dicunt ut, mei et debet latine.
@@ -116,6 +118,13 @@
                     est eu omnes albucius.</p>
 
                 <p>...TO HERE ;)</p>
+            </div>
+
+            <h2>Dynamic Height Scroll</h2>
+            <div fatscroll fatscroll-name="dynamicScroll" fatscroll-dynamic="true">
+                <p>Number of paragraphs: {{paragraphs.length}}</p>
+                <p ng-repeat="paragraph in paragraphs track by $index">{{paragraph}}</p>
+                <button ng-click="addExampleParagraph()">add example paragraph here!</button>
             </div>
             <div class="scrollPicker">
                 <label>pick a scroll

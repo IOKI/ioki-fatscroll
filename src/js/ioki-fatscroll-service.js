@@ -31,7 +31,7 @@ angular.module('ioki.fatscroll')
             getFatscroll: function (name) {
                 for (var i = 0, len = fatscrollsService.fatscrolls.length; i < len; i++) {
                     if (fatscrollsService.fatscrolls[i].name === name) {
-                        return fatscrollsService.fatscrolls[i].scope;
+                        return fatscrollsService.fatscrolls[i];
                     }
                 }
 
@@ -58,6 +58,22 @@ angular.module('ioki.fatscroll')
 
             },
 
+            removeFatscroll: function (name) {
+                var scroll = fatscrollsService.getFatscroll(name),
+                    fatscrolls = fatscrollsService.getFatscrolls(),
+                    index = fatscrolls.indexOf(scroll);
+
+                if (index > -1) {
+                    fatscrolls.splice(index, 1);
+                }
+            },
+
+            getFatscrollScope : function (name) {
+                var scroll = fatscrollsService.getFatscroll(name);
+
+                return scroll.scope ? scroll.scope : null;
+            },
+
             /**
              * Method moveMeTo
              *
@@ -69,10 +85,10 @@ angular.module('ioki.fatscroll')
              * @param additionalOffset      - optional additional offset
              */
             moveMeTo: function (name, value, additionalOffset) {
-                var scroll = fatscrollsService.getFatscroll(name);
+                var scrollScope = fatscrollsService.getFatscrollScope(name);
 
-                if (scroll !== null) {
-                    scroll.scrollTo(value, additionalOffset);
+                if (scrollScope !== null) {
+                    scrollScope.scrollTo(value, additionalOffset);
                 }
             },
 
